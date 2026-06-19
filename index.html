@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iStoc · Manuel Ürün Yükleme Haritası (Freelancer Editör Rehberi)</title>
+<style>
+  :root{
+    --mor:#6d28d9; --mor-acik:#8b5cf6; --mor-soft:#f5f3ff;
+    --mavi:#2563eb; --yesil:#16a34a; --turuncu:#ea580c; --kirmizi:#dc2626;
+    --metin:#1f2937; --gri:#6b7280; --acik-gri:#9ca3af;
+    --cizgi:#e5e7eb; --bg:#f9fafb; --kart:#ffffff;
+    --radius:14px; --golge:0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(17,24,39,.04);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--metin); background:var(--bg); line-height:1.65; font-size:16px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  .layout{display:grid;grid-template-columns:248px 1fr;gap:40px;align-items:start;padding-top:40px}
+
+  /* IKON */
+  .ic{width:1.15em;height:1.15em;display:inline-block;vertical-align:-0.18em;fill:none;
+    stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+  /* OKUMA İLERLEME ÇUBUĞU */
+  #progress{position:fixed;top:0;left:0;height:4px;width:0;z-index:200;
+    background:linear-gradient(90deg,var(--mor) 0%,var(--mor-acik) 60%,#c4b5fd 100%);
+    box-shadow:0 0 8px rgba(124,58,237,.5);transition:width .12s ease-out}
+
+  /* HERO */
+  header.hero{
+    background:linear-gradient(135deg,#5b21b6 0%,#7c3aed 55%,#8b5cf6 100%);
+    color:#fff;padding:54px 0 60px;position:relative;overflow:hidden;
+  }
+  header.hero::after{content:"";position:absolute;right:-80px;top:-80px;width:340px;height:340px;
+    background:radial-gradient(circle,rgba(255,255,255,.14),transparent 70%);border-radius:50%}
+  .brand{display:inline-flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.5px;
+    background:rgba(255,255,255,.16);padding:7px 16px;border-radius:999px;font-size:13px;margin-bottom:22px}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:#c4b5fd;box-shadow:0 0 0 4px rgba(196,181,253,.3)}
+  header.hero h1{font-size:38px;line-height:1.2;font-weight:800;max-width:760px}
+  header.hero p.sub{margin-top:16px;font-size:18px;opacity:.92;max-width:680px}
+  .hero-meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:12px}
+  .hero-meta span{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);padding:8px 15px;border-radius:10px;font-size:13.5px}
+
+  /* NAV — TIMELINE */
+  nav.toc{position:sticky;top:24px;background:var(--kart);border:1px solid var(--cizgi);
+    border-radius:var(--radius);padding:20px 18px;box-shadow:var(--golge);font-size:14px}
+  nav.toc h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--acik-gri);margin:0 0 16px 4px}
+  .toc-list{position:relative}
+  /* dikey bağlantı çizgisi (noktaların arkasında) */
+  .toc-list::before{content:"";position:absolute;left:12px;top:14px;bottom:14px;width:2px;background:var(--cizgi);z-index:0}
+  .toc-list a{position:relative;z-index:1;display:flex;align-items:center;gap:12px;
+    padding:6px 6px;color:var(--gri);text-decoration:none;transition:color .15s}
+  .toc-list a .n{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--cizgi);
+    background:var(--kart);color:var(--acik-gri);display:grid;place-items:center;
+    font-size:11px;font-weight:700;transition:.2s}
+  /* okunmuş (geçilmiş) adımlar */
+  .toc-list a.done{color:#4b5563}
+  .toc-list a.done .n{border-color:var(--mor-acik);color:var(--mor);background:var(--mor-soft)}
+  /* aktif (şu an okunan) adım */
+  .toc-list a.active{color:var(--mor);font-weight:700}
+  .toc-list a.active .n{background:var(--mor);border-color:var(--mor);color:#fff;
+    box-shadow:0 0 0 4px rgba(124,58,237,.15)}
+  /* hover */
+  .toc-list a:hover{color:var(--mor)}
+  .toc-list a:hover .n{border-color:var(--mor-acik)}
+
+  main{padding:0 0 80px;min-width:0}
+  section{margin-bottom:54px;scroll-margin-top:24px}
+  section > h2{font-size:27px;font-weight:800;color:#111827;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  section > h2 .badge{flex:none;width:38px;height:38px;border-radius:11px;background:var(--mor);color:#fff;
+    display:grid;place-items:center;font-size:17px;font-weight:700}
+  section > p.lead{color:var(--gri);font-size:16.5px;margin-bottom:24px;max-width:760px}
+  h3{font-size:19px;font-weight:700;margin:30px 0 12px;color:#1f2937;display:flex;align-items:center;gap:9px}
+  h3 .ic{color:var(--mor)}
+
+  /* KARTLAR */
+  .card{background:var(--kart);border:1px solid var(--cizgi);border-radius:var(--radius);
+    padding:24px;box-shadow:var(--golge);margin-bottom:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+  /* OZET 3'LU */
+  .ov{border:1px solid var(--cizgi);border-radius:var(--radius);padding:22px;background:#fff;box-shadow:var(--golge)}
+  .ov .ic{width:30px;height:30px;color:var(--mor);background:var(--mor-soft);padding:7px;border-radius:10px;box-sizing:content-box;margin-bottom:12px}
+  .ov h3{margin:0 0 6px;font-size:17px}
+  .ov p{color:#6b7280;font-size:14px}
+
+  /* URL KUTUSU */
+  .urlbox{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--cizgi);
+    border-left:4px solid var(--mor);border-radius:12px;padding:16px 18px;margin:10px 0}
+  .urlbox .ic{width:24px;height:24px;color:var(--mor)}
+  .urlbox .t{font-size:13px;color:var(--gri)}
+  .urlbox .u{font-size:16px;font-weight:700;color:#111827;font-family:"SF Mono",Menlo,Consolas,monospace}
+
+  /* ADIM LİSTESİ */
+  ol.steps{list-style:none;counter-reset:s;padding:0}
+  ol.steps > li{counter-increment:s;position:relative;padding:0 0 26px 62px;border-left:2px solid var(--cizgi);margin-left:20px}
+  ol.steps > li:last-child{border-left-color:transparent;padding-bottom:0}
+  ol.steps > li::before{content:counter(s);position:absolute;left:-21px;top:-4px;width:40px;height:40px;
+    border-radius:50%;background:var(--mor);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px;
+    box-shadow:0 0 0 5px var(--bg)}
+  ol.steps > li h4{font-size:17px;font-weight:700;margin-bottom:6px;color:#111827;display:flex;align-items:center;gap:8px}
+  ol.steps > li h4 .ic{color:var(--mor)}
+  ol.steps > li p{color:#4b5563;font-size:15px;margin-bottom:8px}
+
+  /* TABLO */
+  table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--cizgi)}
+  th{background:#f3f4f6;text-align:left;padding:11px 14px;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:#374151}
+  td{padding:11px 14px;border-top:1px solid var(--cizgi);vertical-align:top}
+  tr:hover td{background:#fafafa}
+  .tagcol{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+  .tagcol .ic{color:var(--mor);width:18px;height:18px}
+  .req{display:inline-block;background:#fef2f2;color:var(--kirmizi);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .opt{display:inline-block;background:#f0fdf4;color:var(--yesil);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  code{background:#f3f4f6;padding:2px 7px;border-radius:5px;font-size:13px;font-family:"SF Mono",Menlo,Consolas,monospace;color:#7c3aed}
+
+  /* UYARI KUTULARI */
+  .note{display:flex;gap:12px;border-radius:12px;padding:16px 18px;margin:16px 0;font-size:14.5px;line-height:1.6}
+  .note .ic{width:22px;height:22px;flex:none;margin-top:1px}
+  .note .body{flex:1}
+  .note.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+  .note.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+  .note.danger{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+  .note.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+  .note strong{font-weight:700}
+
+  /* STATUS AKIŞ */
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:20px 0}
+  .flow .st{padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;border:2px solid}
+  .st.draft{background:#f9fafb;border-color:#d1d5db;color:#4b5563}
+  .st.pending{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+  .st.active{background:#f0fdf4;border-color:#86efac;color:#166534}
+  .st.rejected{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+  .flow .arr{color:var(--acik-gri);width:22px;height:22px}
+
+  /* ZORUNLU ALAN KARTLARI */
+  .reqcards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+  .reqcard{background:#fff;border:1px solid var(--cizgi);border-top:3px solid var(--mor);border-radius:12px;padding:18px;text-align:center}
+  .reqcard .ic{width:26px;height:26px;color:var(--mor);margin-bottom:8px}
+  .reqcard .lbl{font-weight:700;font-size:15px;margin-bottom:4px}
+  .reqcard .fld{font-size:12px;color:var(--mor);font-family:"SF Mono",Menlo,Consolas,monospace}
+  .reqcard .hint{font-size:12.5px;color:var(--gri);margin-top:8px}
+
+  /* SOZLUK */
+  .gloss{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .gitem{background:#fff;border:1px solid var(--cizgi);border-radius:12px;padding:16px 18px}
+  .gitem .top{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;margin-bottom:5px}
+  .gitem .top .ic{color:var(--mor);width:18px;height:18px}
+  .gitem .top code{font-size:11.5px}
+  .gitem p{font-size:13.5px;color:#4b5563;line-height:1.6}
+
+  /* CHECKLIST */
+  .checklist{list-style:none;padding:0}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px dashed var(--cizgi);font-size:15px}
+  .checklist li:last-child{border-bottom:none}
+  .checklist .box{flex:none;width:22px;height:22px;border:2px solid var(--mor-acik);border-radius:6px;margin-top:2px}
+
+  /* SSS */
+  details{background:#fff;border:1px solid var(--cizgi);border-radius:12px;padding:0;margin-bottom:12px;overflow:hidden}
+  details summary{padding:16px 20px;font-weight:700;cursor:pointer;list-style:none;font-size:15.5px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  details summary::-webkit-details-marker{display:none}
+  details summary .chev{width:20px;height:20px;color:var(--mor);transition:transform .2s;flex:none}
+  details[open] summary .chev{transform:rotate(180deg)}
+  details summary:hover{color:var(--mor)}
+  details .ans{padding:0 20px 18px;color:#4b5563;font-size:14.5px;line-height:1.7}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:999px;margin-left:6px;background:var(--mor-soft);color:var(--mor)}
+  .pill .ic{width:14px;height:14px}
+  .inlinest{display:inline-block;padding:2px 9px;font-size:12px;border-radius:7px;font-weight:700;border:1.5px solid}
+
+  footer{border-top:1px solid var(--cizgi);padding:30px 0;text-align:center;color:var(--acik-gri);font-size:13.5px}
+
+  @media(max-width:920px){
+    .layout{grid-template-columns:1fr}
+    nav.toc{display:none}
+    .grid2,.grid3,.reqcards,.gloss{grid-template-columns:1fr}
+    header.hero h1{font-size:30px}
+  }
+  @media print{
+    nav.toc,#progress{display:none}.layout{grid-template-columns:1fr;padding-top:0}
+    header.hero{background:var(--mor)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    section{page-break-inside:avoid}
+    body{font-size:12px}
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- ===== IKON SPRITE ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="i-login" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-danger" viewBox="0 0 24 24"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></symbol>
+  <symbol id="i-dollar" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
+  <symbol id="i-type" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></symbol>
+  <symbol id="i-trending" viewBox="0 0 24 24"><polyline points="23 6 13.5 16.5 8.5 11.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M3 9h18"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+  <symbol id="i-folder-tree" viewBox="0 0 24 24"><path d="M3 3h6l2 2h10v4H3z"/><path d="M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9"/></symbol>
+  <symbol id="i-percent" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91 0z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/></symbol>
+</svg>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> iStoc · B2B Pazaryeri</div>
+    <h1>Manuel Ürün Yükleme Haritası</h1>
+    <p class="sub">Dışarıdan çalışan freelancer editörler için adım adım yol haritası — panele giriş yapmaktan ürünü onaya göndermeye kadar her aşama, terim açıklamalarıyla birlikte.</p>
+    <div class="hero-meta">
+      <span><svg class="ic"><use href="#i-target"/></svg> Hedef: Panelden tek tek ürün listeleme</span>
+      <span><svg class="ic"><use href="#i-edit"/></svg> Yöntem: Formu elle doldurma</span>
+      <span><svg class="ic"><use href="#i-calendar"/></svg> Güncelleme: 19.06.2026</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+  <!-- SOL NAV -->
+  <nav class="toc">
+    <h4>İçindekiler</h4>
+    <div class="toc-list">
+      <a href="#genel"><span class="n">01</span>Genel Bakış</a>
+      <a href="#giris"><span class="n">02</span>Panele Giriş</a>
+      <a href="#yasam"><span class="n">03</span>Ürün Yaşam Döngüsü</a>
+      <a href="#hazirlik"><span class="n">04</span>Başlamadan Önce</a>
+      <a href="#zorunlu"><span class="n">05</span>Zorunlu 4 Alan</a>
+      <a href="#adimlar"><span class="n">06</span>Adım Adım Ürün Ekleme</a>
+      <a href="#sekmeler"><span class="n">07</span>Form Sekmeleri</a>
+      <a href="#sozluk"><span class="n">08</span>Alan Sözlüğü</a>
+      <a href="#gorsel"><span class="n">09</span>Görsel Kuralları</a>
+      <a href="#hata"><span class="n">10</span>Sık Yapılan Hatalar</a>
+      <a href="#onay"><span class="n">11</span>Onay Sonrası</a>
+      <a href="#sss"><span class="n">12</span>Sık Sorulanlar</a>
+      <a href="#kontrol"><span class="n">13</span>Kontrol Listesi</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- 01 GENEL -->
+    <section id="genel">
+      <h2><span class="badge">1</span> Genel Bakış</h2>
+      <p class="lead">iStoc'ta ürünler <strong>Satıcı Paneli</strong> üzerinden, ürün formu elle doldurularak yüklenir. Editör olarak göreviniz, bir ürünü <strong>eksiksiz ve doğru</strong> şekilde hazırlayıp onaya göndermektir. Akış üç temel aşamadan oluşur:</p>
+
+      <div class="grid3">
+        <div class="ov">
+          <svg class="ic"><use href="#i-login"/></svg>
+          <h3>1. Giriş ve Erişim</h3>
+          <p>Size verilen kullanıcı bilgileriyle panele girer, ürün formunu açarsınız.</p>
+        </div>
+        <div class="ov">
+          <svg class="ic"><use href="#i-edit"/></svg>
+          <h3>2. Formu Doldurma</h3>
+          <p>Ürün adı, fiyat, kategori, görsel ve diğer detayları sekme sekme girersiniz.</p>
+        </div>
+        <div class="ov">
+          <svg class="ic"><use href="#i-check-circle"/></svg>
+          <h3>3. Kaydet ve Onay</h3>
+          <p>Kaydettiğinizde ürün onaya düşer; yönetici onayından sonra sitede yayınlanır.</p>
+        </div>
+      </div>
+
+      <div class="note info">
+        <svg class="ic"><use href="#i-info"/></svg>
+        <div class="body">Bu rehber yalnızca <strong>manuel (tek tek) ürün ekleme</strong> akışını kapsar. Yüklediğiniz her ürün önce <em>onay bekleyen</em> duruma geçer; yayına alma kararı yöneticidedir. Yani siz ürünü hatasız hazırlamaya odaklanın.</div>
+      </div>
+    </section>
+
+    <!-- 02 GİRİŞ -->
+    <section id="giris">
+      <h2><span class="badge">2</span> Panele Giriş</h2>
+      <p class="lead">Ürün yükleme işlemleri <strong>Satıcı Paneli</strong>'nde yapılır. Müşterilerin gördüğü mağaza (storefront) ayrı bir adrestir; siz panelde çalışırsınız.</p>
+
+      <div class="urlbox">
+        <svg class="ic"><use href="#i-login"/></svg>
+        <div><div class="t">Çalışacağınız yer — Satıcı Paneli</div><div class="u">https://istoc.com/panel</div></div>
+      </div>
+      <div class="urlbox" style="border-left-color:var(--mavi)">
+        <svg class="ic" style="color:var(--mavi)"><use href="#i-globe"/></svg>
+        <div><div class="t">Müşterilerin gördüğü mağaza — Storefront (sadece bilgi)</div><div class="u">https://istoc.com/</div></div>
+      </div>
+
+      <ol class="steps" style="margin-top:24px">
+        <li>
+          <h4><svg class="ic"><use href="#i-login"/></svg> Panel adresine gidin</h4>
+          <p>Tarayıcıdan <code>https://istoc.com/panel</code> adresini açın ve size verilen <strong>kullanıcı adı / şifre</strong> ile giriş yapın. Giriş bilgileriniz yoksa proje yöneticisinden talep edin.</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-store"/></svg> Doğru mağazada olduğunuzu doğrulayın</h4>
+          <p>Panele girdiğinizde, ürünlerinizi atanmış olduğunuz <strong>satıcı mağazasına</strong> yüklersiniz. Yüklediğiniz ürün otomatik olarak bu mağazaya bağlanır — ekstra bir mağaza seçimi yapmanız gerekmez. Birden fazla mağazaya atandıysanız üst köşedeki mağaza adını kontrol edin.</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-list"/></svg> Ürünler sayfasını açın</h4>
+          <p>Sol menüden <strong>Ürünlerim</strong> (İlanlar) sayfasına gidin. Mevcut ürünlerin listesini ve sağ üstte <strong>"Yeni Ürün"</strong> düğmesini görürsünüz.</p>
+        </li>
+      </ol>
+
+      <div class="note warn">
+        <svg class="ic"><use href="#i-warn"/></svg>
+        <div class="body"><strong>Güvenlik:</strong> Giriş bilgilerinizi kimseyle paylaşmayın. İşiniz bittiğinde, ortak bir bilgisayar kullanıyorsanız oturumu kapatın.</div>
+      </div>
+    </section>
+
+    <!-- 03 YAŞAM DÖNGÜSÜ -->
+    <section id="yasam">
+      <h2><span class="badge">3</span> Ürün Yaşam Döngüsü (Durum Akışı)</h2>
+      <p class="lead">Yüklediğiniz her ürün bir <strong>durum (status)</strong> taşır. Editörün anlaması gereken akış şudur:</p>
+
+      <div class="card">
+        <div class="flow">
+          <span class="st draft">Yeni / Doldurulan</span>
+          <svg class="ic arr"><use href="#i-arrow-right"/></svg>
+          <span class="st pending">Onay Bekliyor</span>
+          <svg class="ic arr"><use href="#i-arrow-right"/></svg>
+          <span class="st active">Yayında</span>
+        </div>
+        <div class="flow" style="margin-top:4px">
+          <span class="st pending">Onay Bekliyor</span>
+          <svg class="ic arr"><use href="#i-arrow-right"/></svg>
+          <span class="st rejected">Reddedildi</span>
+          <svg class="ic arr"><use href="#i-arrow-right"/></svg>
+          <span style="color:#6b7280;font-size:14px">düzeltip kaydedince tekrar <b>Onay Bekliyor</b>'a döner</span>
+        </div>
+
+        <table style="margin-top:20px">
+          <thead><tr><th>Durum</th><th>Anlamı</th><th>Kim ayarlar?</th></tr></thead>
+          <tbody>
+            <tr><td><b>Onay Bekliyor</b> <code>Pending</code></td><td>Ürün kaydedildi, yöneticinin onayını bekliyor. Sitede görünmez.</td><td>Sistem (kayıtta otomatik)</td></tr>
+            <tr><td><b>Yayında</b> <code>Active</code></td><td>Onaylandı, müşterilere görünür ve satılabilir.</td><td>Yönetici onaylar</td></tr>
+            <tr><td><b>Duraklatıldı</b> <code>Paused</code></td><td>Geçici olarak satıştan kaldırıldı (silinmez).</td><td>Satıcı / Editör</td></tr>
+            <tr><td><b>Stokta Yok</b> <code>Out of Stock</code></td><td>Görünür ama "Stokta Yok" etiketiyle.</td><td>Satıcı / Editör</td></tr>
+            <tr><td><b>Reddedildi</b> <code>Rejected</code></td><td>Yönetici reddetti; ret nedeni formda kırmızı uyarıyla görünür. Düzeltip tekrar gönderin.</td><td>Yönetici reddeder</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <svg class="ic"><use href="#i-warn"/></svg>
+        <div class="body"><strong>Editör notu:</strong> <code>Onay Bekliyor</code>, <code>Reddedildi</code> ve <code>Taslak</code> durumlarını <u>siz seçemezsiniz</u> — bunlar yöneticiye/sisteme aittir. Bir ürünü kaydettiğinizde otomatik onaya düşer. Onaylandıktan sonra ürünü <code>Yayında</code> / <code>Duraklatıldı</code> / <code>Stokta Yok</code> arasında yönetebilirsiniz.</div>
+      </div>
+    </section>
+
+    <!-- 04 HAZIRLIK -->
+    <section id="hazirlik">
+      <h2><span class="badge">4</span> Başlamadan Önce — Hazırlık</h2>
+      <p class="lead">Ürün eklemeye başlamadan önce elinizde şu bilgi ve dosyalar hazır olsun. Hazırlıklı başlarsanız form birkaç dakikada biter.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 style="margin-top:0"><svg class="ic"><use href="#i-clipboard"/></svg> Bilgi olarak hazır olmalı</h3>
+          <ul class="checklist">
+            <li><span class="box"></span> Ürün adı (net, açıklayıcı — en fazla 500 karakter)</li>
+            <li><span class="box"></span> Liste fiyatı ve satış fiyatı + para birimi</li>
+            <li><span class="box"></span> Hangi platform kategorisine gireceği</li>
+            <li><span class="box"></span> Stok adedi ve minimum sipariş miktarı (MOQ)</li>
+            <li><span class="box"></span> Marka (varsa)</li>
+            <li><span class="box"></span> Kargo bilgisi: ağırlık, paket boyutları, çıkış şehri</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0"><svg class="ic"><use href="#i-image"/></svg> Dosya olarak hazır olmalı</h3>
+          <ul class="checklist">
+            <li><span class="box"></span> 1 ana görsel (ürünü en iyi gösteren kare fotoğraf)</li>
+            <li><span class="box"></span> 3–5 ek galeri görseli (farklı açılar)</li>
+            <li><span class="box"></span> Her görsel <strong>10 MB altında</strong> ve <code>.jpg / .png / .webp</code></li>
+            <li><span class="box"></span> (Varsa) ürün tanıtım videosu URL'si — YouTube / Vimeo</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note danger">
+        <svg class="ic"><use href="#i-danger"/></svg>
+        <div class="body"><strong>Yasak görsel formatları:</strong> Güvenlik nedeniyle <code>.svg</code>, <code>.html</code>, <code>.js</code> ve <code>.xml</code> uzantılı dosyalar görsel olarak <u>reddedilir</u>. Sadece gerçek resim dosyaları (JPG / PNG / WEBP) kullanın.</div>
+      </div>
+    </section>
+
+    <!-- 05 ZORUNLU ALANLAR -->
+    <section id="zorunlu">
+      <h2><span class="badge">5</span> Olmazsa Olmaz: 4 Zorunlu Alan</h2>
+      <p class="lead">Bir ürünü kaydedebilmek için <strong>en az şu 4 alan</strong> dolu olmalıdır. Bunlar boşsa sistem kaydetmez. Diğer her şey opsiyoneldir (ama eksiksiz ürün daha çok satar).</p>
+
+      <div class="reqcards">
+        <div class="reqcard"><svg class="ic"><use href="#i-type"/></svg><div class="lbl">Ürün Adı</div><div class="fld">title</div><div class="hint">Net, açıklayıcı başlık</div></div>
+        <div class="reqcard"><svg class="ic"><use href="#i-dollar"/></svg><div class="lbl">Para Birimi</div><div class="fld">currency</div><div class="hint">Varsayılan: USD</div></div>
+        <div class="reqcard"><svg class="ic"><use href="#i-tag"/></svg><div class="lbl">Liste Fiyatı</div><div class="fld">base_price</div><div class="hint">0'dan büyük olmalı</div></div>
+        <div class="reqcard"><svg class="ic"><use href="#i-cart"/></svg><div class="lbl">Satış Fiyatı</div><div class="fld">selling_price</div><div class="hint">Liste fiyatını GEÇEMEZ</div></div>
+      </div>
+
+      <div class="note danger" style="margin-top:22px">
+        <svg class="ic"><use href="#i-danger"/></svg>
+        <div class="body"><strong>Önemli fiyat kuralı:</strong> Satış fiyatı, liste fiyatından büyük olamaz (<code>selling_price ≤ base_price</code>). Liste fiyatı ürünün normal/üstü çizili fiyatı, satış fiyatı müşterinin ödeyeceği fiyattır. İndirim yüzdesi bu ikisinden otomatik hesaplanır.</div>
+      </div>
+    </section>
+
+    <!-- 06 ADIMLAR -->
+    <section id="adimlar">
+      <h2><span class="badge">6</span> Adım Adım Ürün Ekleme</h2>
+      <p class="lead">Panele giriş yaptıktan sonra bir ürünü baştan sona eklemek için bu sırayı izleyin. Formu yukarıdan aşağıya doldurmak en kolayıdır.</p>
+
+      <ol class="steps">
+        <li>
+          <h4><svg class="ic"><use href="#i-list"/></svg> "Yeni Ürün"e tıklayın</h4>
+          <p><strong>Ürünlerim</strong> sayfasında sağ üstteki <strong>"Yeni Ürün"</strong> düğmesine basın. Boş ürün formu açılır. <strong>Ürün Kodu</strong> otomatik oluşur — siz girmezsiniz.</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-type"/></svg> Genel sekmesi — temel bilgiler</h4>
+          <p>İlk sekme <strong>Genel</strong>'dir. <strong>Ürün Adı</strong>'nı yazın, <strong>Platform Kategorisi</strong>'ni ağaç seçiciden seçin, varsa <strong>Marka</strong>'yı girin ve <strong>Ürün Durumu</strong>'nu (Yeni / Kullanılmış) belirleyin.</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-dollar"/></svg> Fiyatlandırma sekmesi (zorunlu)</h4>
+          <p><strong>Para Birimi</strong>, <strong>Liste Fiyatı</strong> ve <strong>Satış Fiyatı</strong>'nı girin. İsterseniz <strong>B2B Toplu Fiyat</strong> kademeleri ekleyin (örn. 1–10 adet → $85, 11–50 adet → $80).</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-package"/></svg> Stok sekmesi</h4>
+          <p>Stok adedini, <strong>minimum sipariş miktarı (MOQ)</strong> ve gerekiyorsa maksimum sipariş adedini girin. Birim varsayılan olarak "Adet"tir.</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-image"/></svg> Görseller sekmesi</h4>
+          <p>Ana görseli ve galeri fotoğraflarını sürükle-bırak ile yükleyin. İlk görsel arama sonuçlarında çıkar — en iyi fotoğrafı ana görsel yapın. Her görsele <strong>alt metin</strong> eklemek SEO'ya yardımcı olur.</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-layers"/></svg> İsteğe bağlı sekmeleri tamamlayın</h4>
+          <p>Ürünün niteliğine göre <strong>Açıklama</strong>, <strong>Teknik Özellikler</strong>, <strong>Varyantlar</strong> (renk/beden), <strong>Kargo</strong> ve <strong>SEO</strong> sekmelerini doldurun. Sağ üstteki <strong>tamamlanma skoru</strong> ne kadar eksiğiniz olduğunu gösterir.</p>
+        </li>
+        <li>
+          <h4><svg class="ic"><use href="#i-save"/></svg> Kaydedin — ürün onaya düşer</h4>
+          <p>Sağ üstteki <strong>"Kaydet"</strong> düğmesine basın. Zorunlu 4 alan doluysa ürün kaydedilir ve otomatik olarak <span class="inlinest" style="background:#fffbeb;border-color:#fcd34d;color:#92400e">Onay Bekliyor</span> durumuna geçer. Yöneticinin onayından sonra sitede yayınlanır.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- 07 SEKMELER -->
+    <section id="sekmeler">
+      <h2><span class="badge">7</span> Form Sekmeleri — Ne Nerede?</h2>
+      <p class="lead">Ürün formu 11 sekmeden oluşur. Aşağıda her sekmede ne yapacağınız ve zorunluluk durumu özetlenmiştir.</p>
+
+      <table>
+        <thead><tr><th>#</th><th>Sekme</th><th>Ne girersiniz</th><th>Durum</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><span class="tagcol"><svg class="ic"><use href="#i-type"/></svg>Genel</span></td><td>Ürün adı, kategori, marka, ürün durumu (yeni/kullanılmış), görünürlük</td><td><span class="req">Zorunlu temel</span></td></tr>
+          <tr><td>2</td><td><span class="tagcol"><svg class="ic"><use href="#i-list"/></svg>Açıklama</span></td><td>Kısa açıklama + detaylı açıklama (zengin metin editörü)</td><td><span class="opt">Opsiyonel</span></td></tr>
+          <tr><td>3</td><td><span class="tagcol"><svg class="ic"><use href="#i-dollar"/></svg>Fiyatlandırma</span></td><td>Para birimi, liste/satış fiyatı, indirim, B2B toplu fiyat kademeleri</td><td><span class="req">Zorunlu</span></td></tr>
+          <tr><td>4</td><td><span class="tagcol"><svg class="ic"><use href="#i-package"/></svg>Stok</span></td><td>Stok adedi, min/max sipariş miktarı, birim, düşük stok eşiği</td><td><span class="opt">Önerilir</span></td></tr>
+          <tr><td>5</td><td><span class="tagcol"><svg class="ic"><use href="#i-image"/></svg>Görseller</span></td><td>Ana görsel, galeri görselleri, video URL</td><td><span class="opt">Çok önemli</span></td></tr>
+          <tr><td>6</td><td><span class="tagcol"><svg class="ic"><use href="#i-list"/></svg>Teknik Özellikler</span></td><td>Nitelikler (renk, malzeme, ölçü…), sertifikalar</td><td><span class="opt">Opsiyonel</span></td></tr>
+          <tr><td>7</td><td><span class="tagcol"><svg class="ic"><use href="#i-layers"/></svg>Varyantlar</span></td><td>Renk/beden gibi seçenek matrisi; her varyant için ayrı SKU/fiyat/stok</td><td><span class="opt">Gerekiyorsa</span></td></tr>
+          <tr><td>8</td><td><span class="tagcol"><svg class="ic"><use href="#i-truck"/></svg>Kargo</span></td><td>Ağırlık, paket/koli boyutları, çıkış ülkesi/şehri, teslim süresi, kargo yöntemleri</td><td><span class="opt">Önerilir</span></td></tr>
+          <tr><td>9</td><td><span class="tagcol"><svg class="ic"><use href="#i-trending"/></svg>İstatistikler</span></td><td>Görüntülenme, sipariş, puan (salt okunur — siz girmezsiniz)</td><td><span class="opt">Otomatik</span></td></tr>
+          <tr><td>10</td><td><span class="tagcol"><svg class="ic"><use href="#i-globe"/></svg>SEO</span></td><td>Meta başlık, açıklama, anahtar kelimeler (arama görünürlüğü için)</td><td><span class="opt">Opsiyonel</span></td></tr>
+          <tr><td>11</td><td><span class="tagcol"><svg class="ic"><use href="#i-grid"/></svg>Sistem</span></td><td>ERP bağlantısı, yayın/oluşturma tarihleri (salt okunur)</td><td><span class="opt">Otomatik</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3><svg class="ic"><use href="#i-layers"/></svg> Varyant nedir, ne zaman kullanılır?</h3>
+      <p>Bir ürünün renk/beden gibi farklı seçenekleri varsa <strong>Varyantlar</strong> sekmesinde "Varyantlar Aktif" kutusunu işaretleyin. Sihirbaz, seçtiğiniz eksenlerden (örn. Renk × Beden) otomatik bir kombinasyon matrisi oluşturur; her hücreye ayrı görsel, fiyat ve stok girebilirsiniz. Tek tip ürünlerde bu sekmeye dokunmayın.</p>
+    </section>
+
+    <!-- 08 ALAN SÖZLÜĞÜ -->
+    <section id="sozluk">
+      <h2><span class="badge">8</span> Alan Sözlüğü — Terimler Ne Demek?</h2>
+      <p class="lead">Formda karşılaşacağınız terimlerin kısa açıklamaları. Bir alanın ne işe yaradığından emin değilseniz buraya bakın.</p>
+
+      <div class="gloss">
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-type"/></svg> Ürün Adı <code>title</code></div>
+          <p>Ürünün başlığı. Marka + model + ayırt edici özellik içersin (örn. "Ahşap Meşe Yemek Sandalyesi - Kahverengi"). En fazla 500 karakter. <strong>Zorunlu.</strong></p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-tag"/></svg> Liste Fiyatı <code>base_price</code></div>
+          <p>Ürünün normal / referans fiyatı. Müşteride çoğu zaman üstü çizili görünen tutardır. <strong>Zorunlu</strong>, 0'dan büyük olmalı.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-cart"/></svg> Satış Fiyatı <code>selling_price</code></div>
+          <p>Müşterinin gerçekte ödeyeceği fiyat. <strong>Liste fiyatından büyük olamaz.</strong> İki fiyat farkından indirim yüzdesi otomatik hesaplanır.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-package"/></svg> MOQ — Min. Sipariş <code>min_order_qty</code></div>
+          <p>"Minimum Order Quantity". Müşterinin satın alabileceği en az adet. B2B'de toptan satışı garanti eder (örn. en az 10 adet).</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-percent"/></svg> B2B Toplu Fiyat Kademesi</div>
+          <p>Adet arttıkça düşen fiyat tablosu. Her kademe: <em>min adet – max adet – birim fiyat</em>. Örn. 1–10 → $85, 11–50 → $80, 50+ → $75.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-tag"/></svg> Ürün Durumu <code>condition</code></div>
+          <p>Ürünün fiziksel hali: <strong>Yeni</strong>, <strong>Kullanılmış – Yeni Gibi</strong>, <strong>Kullanılmış – İyi</strong> veya <strong>Yenilenmiş</strong>. Doğru seçim güven oluşturur.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-folder-tree"/></svg> Platform Kategorisi <code>product_category</code></div>
+          <p>iStoc'un ağaç yapılı resmi kategorisi. Ürünün aramada ve menülerde bulunmasını sağlar. <strong>En spesifik alt kategoriyi</strong> seçin.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-eye"/></svg> Görünür / Aranabilir</div>
+          <p><strong>Görünür</strong>: ürün sayfası açılabilir. <strong>Aranabilir</strong>: arama sonuçlarında çıkar. İkisi de varsayılan olarak açıktır; özel durum yoksa açık bırakın.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-globe"/></svg> Dil Sekmeleri (TR / EN / AR / RU)</div>
+          <p>Ürün adı ve açıklamaları farklı dillerde girebilirsiniz. <strong>Önce kaynak dili (TR) doldurun</strong> — diğerleri opsiyoneldir, "Kaynaktan Kopyala" ile başlangıç metni alabilirsiniz.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-layers"/></svg> Varyant <code>has_variants</code></div>
+          <p>Aynı ürünün renk/beden gibi alternatifleri. Tek ürün altında matris olarak tanımlanır; her kombinasyona ayrı stok/fiyat/görsel verilir.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-truck"/></svg> Teslim Süresi / Handling</div>
+          <p><strong>İşleme günü (handling)</strong>: siparişi kargoya verme süreniz. <strong>Teslim süresi aralıkları</strong>: adet bazında tahmini teslim günü.</p>
+        </div>
+        <div class="gitem">
+          <div class="top"><svg class="ic"><use href="#i-award"/></svg> Tamamlanma Skoru</div>
+          <p>Ürün sayfasının ne kadar eksiksiz olduğunu (0–100) gösterir. Görsel, açıklama, kategori ve teknik özellik ekledikçe yükselir.</p>
+        </div>
+      </div>
+
+      <h3><svg class="ic"><use href="#i-trending"/></svg> Tamamlanma skorunu nasıl yükseltirim?</h3>
+      <div class="card">
+        <ul class="checklist">
+          <li><span class="box"></span> Ana görsel + en az 3–4 galeri görseli ekleyin</li>
+          <li><span class="box"></span> Kısa ve detaylı açıklamayı doldurun</li>
+          <li><span class="box"></span> En spesifik platform kategorisini seçin</li>
+          <li><span class="box"></span> Teknik özellikleri (malzeme, ölçü, renk vb.) girin</li>
+          <li><span class="box"></span> Kargo bilgisi (ağırlık, boyut) ekleyin</li>
+          <li><span class="box"></span> Varsa marka ve video URL'sini girin</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 09 GÖRSEL -->
+    <section id="gorsel">
+      <h2><span class="badge">9</span> Görsel Kuralları</h2>
+      <p class="lead">Görsel, satışın en kritik unsurudur. iStoc'un teknik sınırları ve önerileri:</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3 style="margin-top:0"><svg class="ic"><use href="#i-image"/></svg> Teknik sınırlar</h3>
+          <table>
+            <tbody>
+              <tr><td>Maksimum boyut</td><td><b>10 MB</b> / görsel</td></tr>
+              <tr><td>İzinli formatlar</td><td><code>.jpg .png .webp</code> (gerçek resim)</td></tr>
+              <tr><td>Yasak formatlar</td><td><code>.svg .html .js .xml</code></td></tr>
+              <tr><td>Ana görsel</td><td>1 adet (teknik olarak zorunlu değil, pratikte şart)</td></tr>
+              <tr><td>Galeri</td><td>Birden fazla; sıralanabilir</td></tr>
+              <tr><td>Video</td><td>YouTube / Vimeo URL'si (dosya değil)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0"><svg class="ic"><use href="#i-check-circle"/></svg> Kalite önerileri</h3>
+          <ul class="checklist">
+            <li><span class="box"></span> Kare oran (1:1), en az 1000×1000 piksel</li>
+            <li><span class="box"></span> Sade / beyaz arka plan, ürün ortada</li>
+            <li><span class="box"></span> En iyi fotoğrafı <strong>ana görsel</strong> yapın (aramada o çıkar)</li>
+            <li><span class="box"></span> Farklı açılar ve detay çekimleri galeriye</li>
+            <li><span class="box"></span> Her görsele kısa <strong>alt metin</strong> yazın</li>
+            <li><span class="box"></span> Bulanık, filigranlı veya başkasına ait görsel kullanmayın</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note danger">
+        <svg class="ic"><use href="#i-danger"/></svg>
+        <div class="body"><strong>Güvenlik filtresi:</strong> Sistem <code>.svg</code>, <code>.html</code>, <code>.js</code>, <code>.xml</code> gibi dosyaları otomatik reddeder. Yalnızca gerçek resim dosyaları yükleyin.</div>
+      </div>
+    </section>
+
+    <!-- 10 HATALAR -->
+    <section id="hata">
+      <h2><span class="badge">10</span> Sık Yapılan Hatalar (Kaçının!)</h2>
+      <p class="lead">Reddedilmeleri ve tekrar işi önlemek için bunlara dikkat edin:</p>
+
+      <table>
+        <thead><tr><th>Hata</th><th>Sonucu</th><th>Doğrusu</th></tr></thead>
+        <tbody>
+          <tr><td>Satış fiyatını liste fiyatından <b>yüksek</b> girmek</td><td>Kayıt reddedilir</td><td>Satış ≤ Liste fiyatı olmalı</td></tr>
+          <tr><td>Zorunlu 4 alandan birini boş bırakmak</td><td>Kaydetme engellenir</td><td>Ad + para birimi + 2 fiyat dolu olmalı</td></tr>
+          <tr><td>10 MB üstü veya <code>.svg/.html</code> görsel yüklemek</td><td>Dosya reddedilir</td><td>JPG/PNG/WEBP, 10 MB altı</td></tr>
+          <tr><td>Görselsiz ürün kaydetmek</td><td>Düşük kalite / düşük satış</td><td>En az 1 ana + birkaç galeri görseli</td></tr>
+          <tr><td>Yanlış / genel kategori seçmek</td><td>Arama görünürlüğü düşer</td><td>En spesifik alt kategoriyi seçin</td></tr>
+          <tr><td>Ürün adını çok kısa / anlamsız yazmak</td><td>SEO ve güven kaybı</td><td>Marka + model + özellik içeren net başlık</td></tr>
+          <tr><td>Farklı renk/beden için ayrı ürün açmak</td><td>Karmaşa, mükerrer ilan</td><td>Tek ürün + Varyantlar sekmesi</td></tr>
+          <tr><td>Yalnızca TR doldurup kaydı atlamak için zorlamak</td><td>Eksik içerik</td><td>Önce TR'yi tam doldurun; diğer diller opsiyonel</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 11 ONAY -->
+    <section id="onay">
+      <h2><span class="badge">11</span> Kaydettikten Sonra Ne Olur?</h2>
+      <div class="card">
+        <ol class="steps">
+          <li><h4><svg class="ic"><use href="#i-clock"/></svg> Ürün "Onay Bekliyor" listesine düşer</h4><p>Yönetici, onay bekleyen ürünleri inceler.</p></li>
+          <li><h4><svg class="ic"><use href="#i-check-circle"/></svg> Yönetici onaylar → "Yayında"</h4><p>Ürün storefront'ta (<code>https://istoc.com/</code>) müşterilere görünür ve satılabilir hale gelir.</p></li>
+          <li><h4><svg class="ic"><use href="#i-warn"/></svg> Veya reddeder → "Reddedildi"</h4><p>Ürünü düzenlemek için açtığınızda formun üstünde <strong>kırmızı bir ret nedeni</strong> görürsünüz. Nedeni giderip <strong>tekrar kaydedin</strong> — ürün otomatik olarak yeniden "Onay Bekliyor"a döner.</p></li>
+          <li><h4><svg class="ic"><use href="#i-eye"/></svg> Yayındaki ürünü yönetin</h4><p>Onaydan sonra ürünü <code>Duraklatıldı</code> veya <code>Stokta Yok</code> yapabilir, fiyat/stok güncelleyebilirsiniz. Büyük değişiklikler tekrar onaya tabi olabilir.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 12 SSS -->
+    <section id="sss">
+      <h2><span class="badge">12</span> Sık Sorulan Sorular</h2>
+
+      <details><summary>Ürünü yayına ben mi alıyorum, yönetici mi?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Siz ürünü eksiksiz hazırlayıp kaydedersiniz; ürün otomatik "Onay Bekliyor" olur. Yayına alma (Active) yöneticinin onayıyla gerçekleşir. Onaylandıktan sonra siz Duraklat / Stokta Yok gibi durumları yönetebilirsiniz.</div></details>
+
+      <details><summary>Hangi mağazaya ürün yüklediğimi nasıl bilirim?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Panele atandığınız mağaza otomatik olarak ürüne bağlanır; ayrıca bir seçim yapmanız gerekmez. Üst köşede mağaza adını görebilirsiniz. Birden fazla mağazaya atandıysanız doğru olanı seçtiğinizden emin olun.</div></details>
+
+      <details><summary>Kategori seçmek zorunlu mu?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Teknik olarak zorunlu değildir, ürün kategorisiz de kaydedilebilir. Ancak <strong>kuvvetle önerilir</strong>: kategori, ürünün aramada ve menülerde bulunmasını sağlar. En spesifik alt kategoriyi seçin.</div></details>
+
+      <details><summary>En az kaç görsel yüklemeliyim?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Sistem görselsiz kayda izin verir ama bu kötü bir uygulamadır. En az 1 ana görsel + 3–5 galeri görseli önerilir. Her biri 10 MB altında JPG / PNG / WEBP olmalı.</div></details>
+
+      <details><summary>Aynı ürünün farklı renk/bedenleri için ayrı ürün mü açmalıyım?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Hayır. <strong>Varyantlar</strong> sekmesini kullanın; tek ürün altında renk/beden kombinasyonlarını matris olarak tanımlayın, her birine ayrı stok/fiyat/görsel verin.</div></details>
+
+      <details><summary>Fiyatı sonradan değiştirebilir miyim?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Evet, ürünü açıp Fiyatlandırma sekmesinden güncelleyebilirsiniz. Satış fiyatının liste fiyatını geçmemesi kuralı her zaman geçerlidir.</div></details>
+
+      <details><summary>Ürün birden fazla dilde mi olmalı?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Zorunlu değil. Önce kaynak dili (TR) doldurun. İngilizce / Arapça / Rusça karşılıklarını dil sekmelerinden ekleyebilir veya "Kaynaktan Kopyala" ile başlangıç metni alabilirsiniz.</div></details>
+
+      <details><summary>Reddedilen ürünü nasıl tekrar gönderirim?<svg class="ic chev"><use href="#i-chevron-down"/></svg></summary><div class="ans">Ürünü açın, üstteki kırmızı ret nedenini okuyun, sorunu giderin ve <strong>Kaydet</strong>'e basın. Ürün otomatik olarak yeniden "Onay Bekliyor" durumuna geçer.</div></details>
+    </section>
+
+    <!-- 13 KONTROL LİSTESİ -->
+    <section id="kontrol">
+      <h2><span class="badge">13</span> Yükleme Öncesi Hızlı Kontrol Listesi</h2>
+      <p class="lead">Kaydet'e basmadan önce şunları gözden geçirin:</p>
+      <div class="card">
+        <ul class="checklist">
+          <li><span class="box"></span> Ürün adı net, marka/model/özellik içeriyor</li>
+          <li><span class="box"></span> Para birimi + liste fiyatı + satış fiyatı dolu</li>
+          <li><span class="box"></span> Satış fiyatı liste fiyatından <u>büyük değil</u></li>
+          <li><span class="box"></span> En spesifik platform kategorisi seçildi</li>
+          <li><span class="box"></span> 1 ana görsel + en az birkaç galeri görseli yüklendi (10 MB altı, JPG/PNG/WEBP)</li>
+          <li><span class="box"></span> Stok adedi ve minimum sipariş miktarı (MOQ) girildi</li>
+          <li><span class="box"></span> Varyant gerekiyorsa renk/beden matrisi tanımlandı</li>
+          <li><span class="box"></span> Kargo bilgisi (ağırlık, boyut, çıkış şehri) eklendi</li>
+          <li><span class="box"></span> Açıklama anlaşılır ve dürüst (yanıltıcı ifade yok)</li>
+          <li><span class="box"></span> Tamamlanma skoru kabul edilebilir seviyede</li>
+        </ul>
+      </div>
+      <div class="note ok">
+        <svg class="ic"><use href="#i-rocket"/></svg>
+        <div class="body"><strong>Hepsi tamamsa Kaydet'e basın.</strong> Ürününüz onaya gidecek; onaylandıktan sonra iStoc'ta yayınlanacaktır. İyi satışlar!</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    iStoc B2B Pazaryeri · Freelancer Editör Manuel Ürün Yükleme Haritası · Dahili eğitim dokümanıdır · 19.06.2026
+  </div>
+</footer>
+
+<script>
+(function(){
+  var prog  = document.getElementById('progress');
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc-list a'));
+  var sections = links.map(function(a){
+    return document.getElementById(a.getAttribute('href').slice(1));
+  });
+
+  /* Okuma ilerleme çubuğu */
+  function onScroll(){
+    var st = window.pageYOffset || document.documentElement.scrollTop;
+    var h  = document.documentElement.scrollHeight - window.innerHeight;
+    prog.style.width = (h > 0 ? Math.min(100, st / h * 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  /* Aktif bölüm vurgusu (scroll-spy) + geçilen adımları işaretleme */
+  function setActive(idx){
+    links.forEach(function(a, i){
+      a.classList.remove('active','done');
+      if(i < idx) a.classList.add('done');
+      else if(i === idx) a.classList.add('active');
+    });
+  }
+
+  var activeIdx = 0;
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        var i = sections.indexOf(e.target);
+        if(i > -1){ activeIdx = i; setActive(activeIdx); }
+      }
+    });
+  }, {rootMargin:'-25% 0px -65% 0px', threshold:0});
+
+  sections.forEach(function(s){ if(s) obs.observe(s); });
+  setActive(0);
+})();
+</script>
+
+</body>
+</html>
