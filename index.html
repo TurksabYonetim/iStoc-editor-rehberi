@@ -13,11 +13,13 @@
     --radius:14px; --golge:0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(17,24,39,.04);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;overflow-x:hidden}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
     color:var(--metin); background:var(--bg); line-height:1.65; font-size:16px;
+    overflow-x:hidden; max-width:100%; position:relative;
   }
+  body.menu-open{overflow:hidden}
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
   .layout{display:grid;grid-template-columns:248px 1fr;gap:40px;align-items:start;padding-top:40px}
 
@@ -109,6 +111,7 @@
   ol.steps > li p{color:#4b5563;font-size:15px;margin-bottom:8px}
 
   /* TABLO */
+  .tablescroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
   table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--cizgi)}
   th{background:#f3f4f6;text-align:left;padding:11px 14px;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:#374151}
   td{padding:11px 14px;border-top:1px solid var(--cizgi);vertical-align:top}
@@ -175,12 +178,79 @@
 
   footer{border-top:1px solid var(--cizgi);padding:30px 0;text-align:center;color:var(--acik-gri);font-size:13.5px}
 
+  /* MOBİL HAMBURGER + ÇEKMECE */
+  .menu-btn{display:none;position:fixed;top:14px;right:14px;z-index:320;
+    width:50px;height:50px;border-radius:14px;cursor:pointer;
+    background:#fff;color:var(--mor);border:1px solid rgba(124,58,237,.25);
+    align-items:center;justify-content:center;
+    box-shadow:0 6px 20px rgba(17,24,39,.22)}
+  .menu-btn:active{transform:scale(.94)}
+  .menu-btn .ic{width:26px;height:26px;stroke-width:2.4}
+  .toc-backdrop{display:none;position:fixed;inset:0;background:rgba(17,24,39,.5);z-index:300}
+  .toc-backdrop.show{display:block}
+
   @media(max-width:920px){
-    .layout{grid-template-columns:1fr}
-    nav.toc{display:none}
+    .layout{grid-template-columns:1fr;padding-top:24px}
     .grid2,.grid3,.reqcards,.gloss{grid-template-columns:1fr}
-    header.hero h1{font-size:30px}
+    header.hero{padding:46px 0 50px}
+    header.hero h1{font-size:27px}
+    header.hero p.sub{font-size:16px}
+    .menu-btn{display:flex}
+
+    /* TOC artık gizli değil; soldan açılan çekmece */
+    nav.toc{display:block;position:fixed;top:0;left:0;bottom:0;width:min(284px,84vw);
+      z-index:310;border-radius:0;border:none;border-right:1px solid var(--cizgi);
+      overflow-y:auto;transform:translateX(-105%);transition:transform .25s ease;
+      box-shadow:0 0 50px rgba(0,0,0,.3)}
+    nav.toc.open{transform:translateX(0)}
+
+    /* içerik taşmalarını engelle */
+    main{padding-bottom:60px}
+    .wrap{padding:0 16px}
+    .card{padding:18px}
+    .urlbox .u{word-break:break-all}
+    section > h2{font-size:23px}
+    /* geniş tablolar yatay kaydırılabilir olsun */
+    .card,section{max-width:100%}
+    table{font-size:13px}
+    th,td{padding:9px 10px;word-break:break-word}
+    code{word-break:break-all}
+    .flow{gap:8px}
+    /* adım listesi dar ekranda daralsın */
+    ol.steps > li{padding-left:50px;margin-left:14px}
+    ol.steps > li::before{width:34px;height:34px;left:-18px;font-size:14px}
   }
+  /* TABLET / KÜÇÜK EKRAN */
+  @media(max-width:560px){
+    header.hero{padding:40px 0 44px}
+    header.hero h1{font-size:24px}
+    .hero-meta span{font-size:12.5px;padding:7px 12px}
+    section > h2{font-size:21px}
+    section > h2 .badge{width:32px;height:32px;font-size:15px}
+    h3{font-size:17px}
+    /* geniş tablolar artık kaydırılarak okunur, ezilmez */
+    .tablescroll table{min-width:500px}
+    .reqcard{padding:14px}
+    .gitem{padding:14px}
+    .ov{padding:18px}
+  }
+  /* DAR TELEFON — 320px'e kadar */
+  @media(max-width:380px){
+    .wrap{padding:0 12px}
+    header.hero h1{font-size:22px}
+    header.hero p.sub{font-size:14.5px}
+    .brand{font-size:12px;margin-bottom:16px}
+    .hero-meta{gap:8px}
+    .hero-meta span{width:100%}
+    .card{padding:14px}
+    section > h2{font-size:19px;gap:9px}
+    .tablescroll table{min-width:440px}
+    ol.steps > li{padding-left:44px;margin-left:12px}
+    ol.steps > li::before{width:30px;height:30px;left:-16px;font-size:13px}
+    .menu-btn{width:44px;height:44px;top:10px;right:10px}
+    nav.toc{width:min(264px,82vw)}
+  }
+  @media print{.menu-btn,.toc-backdrop{display:none!important}}
   @media print{
     nav.toc,#progress{display:none}.layout{grid-template-columns:1fr;padding-top:0}
     header.hero{background:var(--mor)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -192,6 +262,12 @@
 <body>
 
 <div id="progress"></div>
+
+<!-- MOBİL HAMBURGER MENÜ -->
+<button class="menu-btn" id="menuBtn" aria-label="İçindekiler menüsü" aria-expanded="false">
+  <svg class="ic" id="menuIcon"><use href="#i-menu"/></svg>
+</button>
+<div class="toc-backdrop" id="tocBackdrop"></div>
 
 <!-- ===== IKON SPRITE ===== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -227,6 +303,8 @@
   <symbol id="i-percent" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91 0z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
 </svg>
 
 <header class="hero">
@@ -716,6 +794,46 @@
 
   sections.forEach(function(s){ if(s) obs.observe(s); });
   setActive(0);
+
+  /* Geniş tabloları kaydırılabilir kaba sar (dar ekranda taşmayı önler) */
+  Array.prototype.forEach.call(document.querySelectorAll('table'), function(t){
+    if(t.parentNode && t.parentNode.classList.contains('tablescroll')) return;
+    var w = document.createElement('div');
+    w.className = 'tablescroll';
+    t.parentNode.insertBefore(w, t);
+    w.appendChild(t);
+  });
+
+  /* Mobil hamburger menü */
+  var btn      = document.getElementById('menuBtn');
+  var nav      = document.querySelector('nav.toc');
+  var backdrop = document.getElementById('tocBackdrop');
+  var icon     = document.getElementById('menuIcon').querySelector('use');
+
+  function openMenu(){
+    nav.classList.add('open');
+    backdrop.classList.add('show');
+    document.body.classList.add('menu-open');
+    btn.setAttribute('aria-expanded','true');
+    icon.setAttribute('href','#i-x');
+  }
+  function closeMenu(){
+    nav.classList.remove('open');
+    backdrop.classList.remove('show');
+    document.body.classList.remove('menu-open');
+    btn.setAttribute('aria-expanded','false');
+    icon.setAttribute('href','#i-menu');
+  }
+  if(btn){
+    btn.addEventListener('click', function(){
+      nav.classList.contains('open') ? closeMenu() : openMenu();
+    });
+    backdrop.addEventListener('click', closeMenu);
+    /* bir bölüme tıklayınca menü kapansın */
+    links.forEach(function(a){ a.addEventListener('click', closeMenu); });
+    /* ESC ile kapat */
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+  }
 })();
 </script>
 
